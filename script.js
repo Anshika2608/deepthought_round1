@@ -2,12 +2,11 @@ document.addEventListener("DOMContentLoaded", function() {
     const arrow1Button = document.querySelector('.arrow1');
     const arrowInButton = document.querySelector('.arrowin');
     const hiddenLeft = document.querySelector('.hidden_left');
-    const leftbox=document.querySelector('.left_one')
     hiddenLeft.style.display = 'none';
+
     // Toggle .hidden_left visibility when .arrow1 is clicked
     arrow1Button.addEventListener('click', function() {
         hiddenLeft.style.display = hiddenLeft.style.display === 'none' ? 'block' : 'none';
-
         hiddenLeft.classList.toggle('visible');
     });
 
@@ -15,37 +14,43 @@ document.addEventListener("DOMContentLoaded", function() {
     arrowInButton.addEventListener('click', function() {
         hiddenLeft.style.display = hiddenLeft.style.display === 'none' ? 'block' : 'none';
     });
-});
-document.addEventListener('DOMContentLoaded', function() {
-    fetch('http://localhost:3000/fetch-data')
+
+    // Fetch data from JSON file
+    fetch('data.json')
         .then(response => response.json())
         .then(data => {
-            // Assuming 'tasks' is an array and you want the first task
-            const tasks = data.tasks;
+            // Check if tasks array exists and has at least one element
+            if (Array.isArray(data.tasks) && data.tasks.length > 0) {
+                const tasks = data.tasks;
 
-            // Extract asset_title and asset_description from the first task
-            const assets = tasks[0].assets; // Assuming you want assets from the first task
-            const assetTitle = assets.map(asset => asset.asset_title);
-            const assetDescription = assets.map(asset => asset.asset_description);
+                // Iterate through each asset and update the respective card
+                tasks[0].assets.forEach((asset, index) => {
+                    const card = document.querySelectorAll('.card1')[index]; // Get the respective card
 
-            // Assuming you want to create HTML elements to display each asset's title and description
-            const container = document.getElementById('card1'); // Replace 'asset-container' with your actual container ID
+                    if (card) {
+                        const titleElement = card.querySelector('.upper_first');
+                        const descriptionElement = card.querySelector('.mid p');
+                        const videoContainer = card.querySelector('.video-container iframe');
 
-            // Loop through assets and create HTML elements
-            assets.forEach(asset => {
-                const title = document.createElement('h4');
-                title.textContent = asset.asset_title;
-                title.classList.add('upper_first');
+                        if (titleElement && descriptionElement) {
+                            titleElement.textContent = asset.asset_title;
+                            descriptionElement.innerHTML = `<strong>Description:</strong> ${asset.asset_description}`;
+                        } else {
+                            console.error('Title or description element not found in card.');
+                        }
 
-                const description = document.createElement('p');
-                description.textContent = asset.asset_description;
-                description.classList.add('mid');
-
-                container.appendChild(title);
-                container.appendChild(description);
-            });
+                        if (videoContainer && asset.asset_content_type === 'video') {
+                            videoContainer.src = asset.asset_content.trim();
+                        }
+                    } else {
+                        console.error('Card element not found.');
+                    }
+                });
+            } else {
+                console.error('No tasks found in the data.');
+            }
         })
         .catch(error => {
             console.error('Error fetching data:', error);
         });
-    })
+});
